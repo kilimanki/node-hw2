@@ -1,56 +1,53 @@
-const fs = require("fs/promises");
-const path = require("path");
-const { nanoid } = require("nanoid");
-const contactsPath = path.join(__dirname, "contacts.json");
-const updateContact = async (contacts) =>
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-const listContacts = async () => {
-  const data = await fs.readFile(contactsPath, "utf-8");
-  return JSON.parse(data);
-};
-const getContactById = async (id) => {
-  const contacts = await listContacts();
-  const result = contacts.find((item) => item.id === id);
-  return result || null;
-};
-const addContact = async ({ name, email, phone }) => {
-  const contacts = await listContacts();
-  const newContact = {
-    id: nanoid(),
-    name,
-    email,
-    phone,
-  };
-  contacts.push(newContact);
-  await updateContact(contacts);
+const { Schema, model } = require("mongoose");
+const { mongooseError } = require("../helpers");
+const Joi = require("joi");
 
-  return newContact;
+const contactSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Set name for contact"],
+    },
+    email: {
+      type: String,
+    },
+    phone: {
+      type: String,
+    },
+    favorite: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { versionKey: false }
+);
+contactSchema.post("save", mongooseError);
+const contactAddSchema = Joi.object({
+  name: Joi.string()
+    .required()
+    .messages({ "any.required": "missing required name field" }),
+  email: Joi.string()
+    .required()
+    .messages({ "any.required": "missing required email field" }),
+  phone: Joi.string()
+    .required()
+    .messages({ "any.required": "missing required phone field" }),
+  favorite: Joi.boolean().messages({
+    "any.required": "missing field favorite",
+  }),
+});
+const updateSchema = Joi.object({
+  favorite: Joi.boolean().messages({
+    "any.required": "missing field favorite",
+  }),
+});
+const schemas = {
+  contactAddSchema,
+  updateSchema,
 };
-const updateContactById = async (id, { name, email, phone }) => {
-  const contacts = await listContacts();
-  const index = contacts.findIndex((item) => item.id === id);
-  if (index === -1) {
-    return null;
-  }
-  contacts[index] = { id, name, email, phone };
-  await updateContact(contacts);
-  return contacts[index];
-};
-const deleteContact = async (id) => {
-  const contacts = await listContacts();
-  const index = contacts.findIndex((item) => item.id === id);
-  if (index === -1) {
-    return null;
-  }
-  const [result] = contacts.splice(index, 1);
-  await updateContact(contacts);
 
-  return result;
-};
+const Contact = model("contact", contactSchema);
 module.exports = {
-  listContacts,
-  getContactById,
-  addContact,
-  deleteContact,
-  updateContactById,
+  Contact,
+  schemas,
 };
