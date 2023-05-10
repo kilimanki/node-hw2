@@ -2,8 +2,9 @@ const { HttpError } = require("../helpers");
 const validateData = (schema) => {
   const func = (req, res, next) => {
     const { error } = schema.validate(req.body);
-    const test = {};
-    if (JSON.stringify(req.body) === JSON.stringify(test)) {
+    const field = {};
+    console.log(req.body);
+    if (JSON.stringify(req.body) === JSON.stringify(field)) {
       next(HttpError(400, "missing fields"));
     }
     if (error) {
@@ -14,4 +15,23 @@ const validateData = (schema) => {
   };
   return func;
 };
-module.exports = validateData;
+const validateFavorite = (schema) => {
+  const func = (req, res, next) => {
+    const { error } = schema.validate(req.body);
+    const field = {};
+    console.log(req.body);
+    if (JSON.stringify(req.body) === JSON.stringify(field)) {
+      next(HttpError(400, "missing field favorite"));
+    }
+    if (error) {
+      next(HttpError(400, error.message));
+    }
+
+    next();
+  };
+  return func;
+};
+module.exports = {
+  validateData,
+  validateFavorite,
+};
