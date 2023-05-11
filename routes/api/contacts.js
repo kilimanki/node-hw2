@@ -4,9 +4,12 @@ const {
   validateData,
   validateFavorite,
   isValidId,
+  authenticate,
 } = require("../../middlewares");
 const { schemas } = require("../../models/contacts");
 const router = express.Router();
+
+router.use(authenticate);
 
 router.get("/", ctrl.getAll);
 
